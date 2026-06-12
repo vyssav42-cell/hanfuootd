@@ -1,0 +1,19 @@
+{
+  "name": "汉服穿搭手账",
+  "short_name": "汉服手账",
+  "description": "记录每日汉服穿搭、衣柜单品和穿着统计的手账 App",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f8f3e9",
+  "theme_color": "#f8f3e9",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
