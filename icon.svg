@@ -1,0 +1,90 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="80" y1="40" x2="430" y2="470" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF8ED"/>
+      <stop offset="1" stop-color="#E9D8BF"/>
+    </linearGradient>
+
+    <linearGradient id="green" x1="170" y1="130" x2="360" y2="410" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#9DB9AA"/>
+      <stop offset="1" stop-color="#5E8275"/>
+    </linearGradient>
+
+    <linearGradient id="pink" x1="150" y1="300" x2="360" y2="420" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#DFA7A0"/>
+      <stop offset="1" stop-color="#B96D65"/>
+    </linearGradient>
+
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#7E6042" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+
+  <rect width="512" height="512" rx="116" fill="url(#bg)"/>
+
+  <path d="M88 145C150 84 251 63 338 96C409 123 452 185 457 256C462 336 416 413 337 443C256 474 157 454 101 390C40 322 31 201 88 145Z"
+        fill="#FFFDF7" opacity="0.55"/>
+
+  <circle cx="256" cy="256" r="178" fill="none" stroke="#D9C6AA" stroke-width="7" opacity="0.75"/>
+  <circle cx="256" cy="256" r="151" fill="none" stroke="#FFFFFF" stroke-width="3" opacity="0.85"/>
+
+  <g filter="url(#shadow)">
+    <path d="M256 107
+             C232 137 207 172 185 218
+             C160 269 143 330 138 397
+             C171 415 212 426 256 426
+             C300 426 341 415 374 397
+             C369 330 352 269 327 218
+             C305 172 280 137 256 107Z"
+          fill="url(#green)"/>
+
+    <path d="M256 107
+             C242 164 237 241 240 420
+             C245 423 250 425 256 426
+             C262 425 267 423 272 420
+             C275 241 270 164 256 107Z"
+          fill="#FFF4E5"/>
+
+    <path d="M184 227
+             C210 252 229 286 240 346"
+          fill="none"
+          stroke="#FFF4E5"
+          stroke-width="17"
+          stroke-linecap="round"
+          opacity="0.95"/>
+
+    <path d="M328 227
+             C302 252 283 286 272 346"
+          fill="none"
+          stroke="#FFF4E5"
+          stroke-width="17"
+          stroke-linecap="round"
+          opacity="0.95"/>
+
+    <path d="M150 390
+             C185 365 220 354 256 354
+             C292 354 327 365 362 390
+             C330 414 295 426 256 426
+             C217 426 182 414 150 390Z"
+          fill="url(#pink)"
+          opacity="0.95"/>
+
+    <path d="M181 394
+             C219 379 293 379 331 394"
+          fill="none"
+          stroke="#FFF4E5"
+          stroke-width="8"
+          stroke-linecap="round"
+          opacity="0.65"/>
+
+    <circle cx="256" cy="112" r="18" fill="#B96D65"/>
+  </g>
+
+  <g transform="translate(348 72)">
+    <rect width="72" height="92" rx="10" fill="#FFF8ED" stroke="#B96D65" stroke-width="6"/>
+    <text x="36" y="35" text-anchor="middle" font-size="25" fill="#B96D65"
+          font-family="serif" font-weight="600">衣</text>
+    <text x="36" y="68" text-anchor="middle" font-size="25" fill="#B96D65"
+          font-family="serif" font-weight="600">记</text>
+  </g>
+</svg>
