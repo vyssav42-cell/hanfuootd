@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>汉服穿搭手账</title>
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:#e9e1d3;
+  font-family:"PingFang SC","Microsoft YaHei",sans-serif;
+  color:#2b2723;
+}
+.app{
+  max-width:430px;
+  margin:0 auto;
+  min-height:100vh;
+  background:#f8f3e9;
+  position:relative;
+  padding-bottom:86px;
+}
+header{
+  padding:34px 20px 16px;
+  background:linear-gradient(#f8f3e9,#f4ecdf);
+  border-bottom:1px solid #e1d6c4;
+}
+.title{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+}
+.title h1{
+  margin:0;
+  font-size:23px;
+  letter-spacing:4px;
+  font-weight:400;
+}
+.subtitle{
+  font-size:12px;
+  color:#8a7f70;
+  margin-top:6px;
+}
+.seal{
+  border:1px solid #b56b64;
+  color:#b56b64;
+  padding:5px 7px;
+  font-size:12px;
+  writing-mode:vertical-rl;
+  letter-spacing:2px;
+}
+.tabs{
+  position:fixed;
+  bottom:0;
+  left:50%;
+  transform:translateX(-50%);
+  max-width:430px;
+  width:100%;
+  display:flex;
+  background:#f8f3e9;
+  border-top:1px solid #ddd0bc;
+  padding:8px 0 18px;
+  z-index:10;
+}
+.tabs button{
+  flex:1;
+  border:0;
+  background:none;
+  color:#9b907f;
+  font-size:12px;
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+  align-items:center;
+}
+.tabs button.active{color:#66877a;font-weight:600}
+main{padding:16px}
+.card{
+  background:#fffaf1;
+  border:1px solid #e1d6c4;
+  border-radius:16px;
+  padding:15px;
+  margin-bottom:14px;
+  box-shadow:0 5px 14px rgba(102,80,50,.05);
+}
+.card h2{
+  margin:0 0 10px;
+  font-size:17px;
+  font-weight:500;
+  letter-spacing:1px;
+}
+.muted{color:#8f8475;font-size:12px}
+.row{display:flex;gap:10px;align-items:center}
+.btn{
+  border:0;
+  background:#6f8f83;
+  color:white;
+  padding:10px 14px;
+  border-radius:999px;
+  font-size:13px;
+}
+.btn.secondary{
+  background:#eadfcd;
+  color:#5d5246;
+}
+.btn.danger{
+  background:#b86b64;
+}
+input,select,textarea{
+  width:100%;
+  border:1px solid #ddcfba;
+  background:#fffdf8;
+  border-radius:12px;
+  padding:10px;
+  margin:6px 0;
+  font-size:14px;
+  font-family:inherit;
+}
+textarea{min-height:70px;resize:vertical}
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+.item{
+  border:1px solid #e0d5c3;
+  background:#fffdf8;
+  border-radius:14px;
+  overflow:hidden;
+}
+.photo{
+  width:100%;
+  aspect-ratio:1/1;
+  background:#eee5d7;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  color:#9a8c79;
+}
+.photo img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+.item-body{padding:10px}
+.item-name{
+  font-size:14px;
+  margin-bottom:4px;
+}
+.tag{
+  display:inline-block;
+  padding:3px 7px;
+  border-radius:999px;
+  background:#edf1ec;
+  color:#6f8f83;
+  font-size:11px;
+  margin-right:4px;
+}
+.price{font-size:12px;color:#9a7c5a;margin-top:4px}
+.small{
+  font-size:12px;
+  color:#8d8171;
+}
+.ootd{
+  border-left:4px solid #8fa99c;
+}
+.checklist{
+  max-height:230px;
+  overflow:auto;
+  border:1px solid #e2d5c2;
+  border-radius:12px;
+  padding:8px;
+  background:#fffdf8;
+}
+.checkline{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  padding:7px 2px;
+  font-size:14px;
+}
+.checkline input{width:auto;margin:0}
+.calendar{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:5px;
+}
+.day-head,.day{
+  text-align:center;
+  font-size:12px;
+}
+.day-head{color:#9a8c79;padding:5px 0}
+.day{
+  aspect-ratio:1;
+  border:1px solid #e0d5c3;
+  border-radius:10px;
+  background:#fffdf8;
+  padding-top:5px;
+  position:relative;
+}
+.day.has{
+  background:#eff4ef;
+  border-color:#8fa99c;
+}
+.dot{
+  width:6px;height:6px;
+  background:#b86b64;
+  border-radius:50%;
+  position:absolute;
+  left:50%;
+  bottom:6px;
+  transform:translateX(-50%);
+}
+.stat{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+.stat-box{
+  background:#fffdf8;
+  border:1px solid #e0d5c3;
+  border-radius:14px;
+  padding:13px;
+}
+.stat-num{
+  font-size:22px;
+  color:#66877a;
+  margin-bottom:4px;
+}
+.empty{
+  text-align:center;
+  color:#9b907f;
+  padding:28px 10px;
+  font-size:13px;
+}
+hr{
+  border:0;
+  border-top:1px dashed #d8cbb8;
+  margin:12px 0;
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="title">
+      <div>
+        <h1>汉服穿搭手账</h1>
+        <div class="subtitle" id="todayText"></div>
+      </div>
+      <div class="seal">衣记</div>
+    </div>
+  </header>
+
+  <main id="main"></main>
+
+  <nav class="tabs">
+    <button onclick="setTab('today')" id="tab-today">今日<br>穿搭</button>
+    <button onclick="setTab('wardrobe')" id="tab-wardrobe">衣柜<br>单品</button>
+    <button onclick="setTab('calendar')" id="tab-calendar">日历<br>记录</button>
+    <button onclick="setTab('stats')" id="tab-stats">统计<br>花费</button>
+  </nav>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const todayKey = new Date().toISOString().slice(0,10);
+
+let tab = localStorage.getItem("hanfu_tab") || "today";
+let clothes = JSON.parse(localStorage.getItem("hanfu_clothes") || "[]");
+let ootds = JSON.parse(localStorage.getItem("hanfu_ootds") || "[]");
+
+if(clothes.length === 0){
+  clothes = [
+    {id:1,name:"灰蓝百迭裙",cat:"裙装",price:320,date:"2026-03-10",shop:"",note:"",img:""},
+    {id:2,name:"白色飞机袖",cat:"上衣",price:158,date:"2026-05-01",shop:"",note:"",img:""},
+    {id:3,name:"茶色吊带",cat:"上衣",price:128,date:"2026-04-15",shop:"",note:"",img:""}
+  ];
+  save();
+}
+
+function save(){
+  localStorage.setItem("hanfu_clothes", JSON.stringify(clothes));
+  localStorage.setItem("hanfu_ootds", JSON.stringify(ootds));
+  localStorage.setItem("hanfu_tab", tab);
+}
+
+function setTab(t){
+  tab = t;
+  save();
+  render();
+}
+
+function fileToBase64(file, cb){
+  if(!file){ cb(""); return; }
+  const reader = new FileReader();
+  reader.onload = e => cb(e.target.result);
+  reader.readAsDataURL(file);
+}
+
+function formatDate(d){
+  return d.replaceAll("-","/");
+}
+
+function getWearCount(id){
+  return ootds.filter(o => o.items.includes(id)).length;
+}
+
+function render(){
+  $("todayText").innerText = "今日 · " + formatDate(todayKey);
+  document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));
+  $("tab-" + tab).classList.add("active");
+  if(tab==="today") renderToday();
+  if(tab==="wardrobe") renderWardrobe();
+  if(tab==="calendar") renderCalendar();
+  if(tab==="stats") renderStats();
+}
+
+function renderToday(){
+  const todayOotd = ootds.find(o => o.date === todayKey);
+  $("main").innerHTML = `
+    <div class="card">
+      <h2>今日穿搭</h2>
+      ${
+        todayOotd
+        ? renderOotdCard(todayOotd)
+        : `<div class="empty">今天还没有记录穿搭</div>`
+      }
+      <button class="btn" onclick="showOotdForm('${todayKey}')">
+        ${todayOotd ? "修改今日穿搭" : "记录今天穿什么"}
+      </button>
+    </div>
+
+    <div class="card">
+      <h2>最近穿搭</h2>
+      ${
+        ootds.length
+        ? ootds.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5).map(renderOotdCard).join("")
+        : `<div class="empty">还没有穿搭记录</div>`
+      }
+    </div>
+  `;
+}
+
+function renderWardrobe(){
+  $("main").innerHTML = `
+    <div class="card">
+      <h2>添加汉服单品</h2>
+      <input id="c-name" placeholder="名称，例如：灰蓝百迭裙">
+      <select id="c-cat">
+        <option>上衣</option><option>裙装</option><option>外套</option>
+        <option>披帛</option><option>鞋履</option><option>发饰</option>
+        <option>包袋</option><option>其他</option>
+      </select>
+      <input id="c-price" type="number" placeholder="价格">
+      <input id="c-date" type="date">
+      <input id="c-shop" placeholder="店铺/品牌，可不填">
+      <textarea id="c-note" placeholder="备注，可不填"></textarea>
+      <input id="c-img" type="file" accept="image/*">
+      <button class="btn" onclick="addCloth()">保存到衣柜</button>
+    </div>
+
+    <div class="card">
+      <h2>我的衣柜</h2>
+      ${
+        clothes.length
+        ? `<div class="grid">${clothes.map(renderCloth).join("")}</div>`
+        : `<div class="empty">衣柜还是空的</div>`
+      }
+    </div>
+  `;
+}
+
+function renderCloth(c){
+  const count = getWearCount(c.id);
+  const cost = count ? Math.round(Number(c.price || 0) / count) : Number(c.price || 0);
+  return `
+    <div class="item">
+      <div class="photo">${c.img ? `<img src="${c.img}">` : "无照片"}</div>
+      <div class="item-body">
+        <div class="item-name">${c.name}</div>
+        <span class="tag">${c.cat}</span>
+        <div class="price">¥${c.price || 0}</div>
+        <div class="small">已穿 ${count} 次</div>
+        <div class="small">单次成本 ¥${cost}</div>
+        ${c.shop ? `<div class="small">店铺：${c.shop}</div>` : ""}
+        <hr>
+        <button class="btn danger" onclick="deleteCloth(${c.id})">删除</button>
+      </div>
+    </div>
+  `;
+}
+
+function addCloth(){
+  const name = $("c-name").value.trim();
+  if(!name){ alert("先填名称"); return; }
+  const file = $("c-img").files[0];
+  fileToBase64(file, img=>{
+    clothes.push({
+      id:Date.now(),
+      name,
+      cat:$("c-cat").value,
+      price:Number($("c-price").value || 0),
+      date:$("c-date").value,
+      shop:$("c-shop").value.trim(),
+      note:$("c-note").value.trim(),
+      img
+    });
+    save();
+    renderWardrobe();
+  });
+}
+
+function deleteCloth(id){
+  if(!confirm("确定删除这件单品吗？相关穿搭记录里也会移除它。")) return;
+  clothes = clothes.filter(c=>c.id!==id);
+  ootds = ootds.map(o=>({...o,items:o.items.filter(i=>i!==id)}));
+  save();
+  render();
+}
+
+function showOotdForm(date){
+  if(clothes.length === 0){
+    alert("请先去衣柜添加汉服单品");
+    setTab("wardrobe");
+    return;
+  }
+  const old = ootds.find(o=>o.date===date);
+  $("main").innerHTML = `
+    <div class="card">
+      <h2>${formatDate(date)} 穿搭记录</h2>
+      <input id="o-name" placeholder="整套名字，例如：初夏青绿宋制" value="${old?.name || ""}">
+      <select id="o-occasion">
+        <option ${old?.occasion==="日常"?"selected":""}>日常</option>
+        <option ${old?.occasion==="拍照"?"selected":""}>拍照</option>
+        <option ${old?.occasion==="逛街"?"selected":""}>逛街</option>
+        <option ${old?.occasion==="茶会"?"selected":""}>茶会</option>
+        <option ${old?.occasion==="漫展"?"selected":""}>漫展</option>
+        <option ${old?.occasion==="通勤"?"selected":""}>通勤</option>
+      </select>
+      <textarea id="o-note" placeholder="今天的穿搭感受、天气、妆造等">${old?.note || ""}</textarea>
+      <div class="small">选择今天穿了哪些单品：</div>
+      <div class="checklist">
+        ${clothes.map(c=>`
+          <label class="checkline">
+            <input type="checkbox" value="${c.id}" ${old?.items.includes(c.id) ? "checked" : ""}>
+            ${c.name} <span class="tag">${c.cat}</span>
+          </label>
+        `).join("")}
+      </div>
+      <input id="o-img" type="file" accept="image/*">
+      ${old?.img ? `<div class="photo" style="margin:10px 0"><img src="${old.img}"></div>` : ""}
+      <button class="btn" onclick="saveOotd('${date}')">保存穿搭</button>
+      <button class="btn secondary" onclick="renderToday()">返回</button>
+      ${old ? `<button class="btn danger" onclick="deleteOotd('${date}')">删除这天记录</button>` : ""}
+    </div>
+  `;
+}
+
+function saveOotd(date){
+  const selected = Array.from(document.querySelectorAll(".checkline input:checked")).map(i=>Number(i.value));
+  if(selected.length===0){
+    alert("至少选择一件单品");
+    return;
+  }
+  const old = ootds.find(o=>o.date===date);
+  const file = $("o-img").files[0];
+  fileToBase64(file, img=>{
+    const data = {
+      date,
+      name:$("o-name").value.trim() || "今日汉服穿搭",
+      occasion:$("o-occasion").value,
+      note:$("o-note").value.trim(),
+      items:selected,
+      img: img || old?.img || ""
+    };
+    ootds = ootds.filter(o=>o.date!==date);
+    ootds.push(data);
+    save();
+    setTab("today");
+  });
+}
+
+function deleteOotd(date){
+  if(!confirm("确定删除这天穿搭记录吗？")) return;
+  ootds = ootds.filter(o=>o.date!==date);
+  save();
+  setTab("today");
+}
+
+function renderOotdCard(o){
+  const names = o.items.map(id=>clothes.find(c=>c.id===id)?.name).filter(Boolean);
+  return `
+    <div class="card ootd" style="margin-bottom:10px">
+      <div class="row" style="justify-content:space-between">
+        <div>
+          <div class="item-name">${o.name}</div>
+          <div class="small">${formatDate(o.date)} · ${o.occasion}</div>
+        </div>
+        <button class="btn secondary" onclick="showOotdForm('${o.date}')">查看</button>
+      </div>
+      ${o.img ? `<div class="photo" style="margin:10px 0"><img src="${o.img}"></div>` : ""}
+      <div class="small">${names.join(" + ")}</div>
+      ${o.note ? `<div class="small" style="margin-top:5px">“${o.note}”</div>` : ""}
+    </div>
+  `;
+}
+
+function renderCalendar(){
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const first = new Date(year, month, 1).getDay();
+  const days = new Date(year, month+1, 0).getDate();
+  let cells = "";
+  ["日","一","二","三","四","五","六"].forEach(d=>cells+=`<div class="day-head">${d}</div>`);
+  for(let i=0;i<first;i++) cells+=`<div></div>`;
+  for(let d=1;d<=days;d++){
+    const key = `${year}-${String(month+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+    const has = ootds.some(o=>o.date===key);
+    cells += `<div class="day ${has?'has':''}" onclick="showOotdForm('${key}')">${d}${has?'<div class="dot"></div>':''}</div>`;
+  }
+
+  $("main").innerHTML = `
+    <div class="card">
+      <h2>${year}年${month+1}月</h2>
+      <div class="calendar">${cells}</div>
+      <div class="small" style="margin-top:12px">点击日期可以补记或查看当天穿搭。</div>
+    </div>
+    <div class="card">
+      <h2>本月记录</h2>
+      ${
+        ootds.filter(o=>o.date.startsWith(`${year}-${String(month+1).padStart(2,"0")}`)).length
+        ? ootds
+          .filter(o=>o.date.startsWith(`${year}-${String(month+1).padStart(2,"0")}`))
+          .sort((a,b)=>b.date.localeCompare(a.date))
+          .map(renderOotdCard).join("")
+        : `<div class="empty">本月还没有记录</div>`
+      }
+    </div>
+  `;
+}
+
+function renderStats(){
+  const totalPrice = clothes.reduce((s,c)=>s+Number(c.price||0),0);
+  const totalWear = ootds.reduce((s,o)=>s+o.items.length,0);
+  const month = todayKey.slice(0,7);
+  const monthDays = ootds.filter(o=>o.date.startsWith(month)).length;
+
+  const ranked = clothes
+    .map(c=>({...c,count:getWearCount(c.id)}))
+    .sort((a,b)=>b.count-a.count);
+
+  $("main").innerHTML = `
+    <div class="card">
+      <h2>穿搭统计</h2>
+      <div class="stat">
+        <div class="stat-box"><div class="stat-num">${clothes.length}</div><div class="small">衣柜单品</div></div>
+        <div class="stat-box"><div class="stat-num">¥${totalPrice}</div><div class="small">总花费</div></div>
+        <div class="stat-box"><div class="stat-num">${ootds.length}</div><div class="small">穿搭天数</div></div>
+        <div class="stat-box"><div class="stat-num">${monthDays}</div><div class="small">本月穿汉服天数</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>单品穿着排行</h2>
+      ${
+        ranked.length
+        ? ranked.map(c=>{
+          const cost = c.count ? Math.round(Number(c.price||0)/c.count) : Number(c.price||0);
+          return `
+            <div style="padding:10px 0;border-bottom:1px dashed #d8cbb8">
+              <div class="row" style="justify-content:space-between">
+                <div>
+                  <div class="item-name">${c.name}</div>
+                  <div class="small">${c.cat} · 已穿 ${c.count} 次</div>
+                </div>
+                <div class="small">单次 ¥${cost}</div>
+              </div>
+            </div>
+          `;
+        }).join("")
+        : `<div class="empty">暂无数据</div>`
+      }
+    </div>
+
+    <div class="card">
+      <h2>闲置提醒</h2>
+      ${
+        ranked.filter(c=>c.count===0).length
+        ? ranked.filter(c=>c.count===0).map(c=>`<div class="small">· ${c.name} 还没有穿过</div>`).join("")
+        : `<div class="empty">目前没有完全闲置的单品</div>`
+      }
+    </div>
+  `;
+}
+
+render();
+</script>
+</body>
+</html>
