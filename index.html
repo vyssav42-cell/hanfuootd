@@ -1536,7 +1536,665 @@ if("caches" in window){
   caches.keys().then(keys=>keys.forEach(k=>caches.delete(k)));
 }
 </script>
+<script>
+/* ===== v4.1 搭配体验优化补丁 =====
+   功能：
+   1. 衣柜顺序改为：我的衣柜在上，添加单品在下
+   2. 单品新增色系
+   3. 搭配模板置顶，一行三个
+   4. 搭配模块选择单品显示缩略图
+   5. 随机搭配支持：不限色系 / 同色系 / 协调色 / 撞色
+   6. 随机结果显示图片
+*/
 
+const V41_VERSION = "v4.1-outfit-color";
+
+const COLOR_GROUPS = [
+  "白/米",
+  "黑/灰",
+  "红/粉",
+  "蓝",
+  "绿",
+  "黄/棕",
+  "紫",
+  "其他"
+];
+
+let randomPicked = [];
+let randomMode = "不限色系";
+
+/* 注入 v4.1 样式 */
+(function injectV41Style(){
+  const style = document.createElement("style");
+  style.innerHTML = `
+    .template-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:8px;
+    }
+    .template-card{
+      background:#fffdf8;
+      border:1px solid #e0d5c3;
+      border-radius:13px;
+      overflow:hidden;
+    }
+    .template-card .photo{
+      aspect-ratio:1/1;
+    }
+    .template-card-body{
+      padding:7px;
+    }
+    .template-card .name{
+      font-size:11px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .template-card .btn{
+      padding:4px 6px;
+      font-size:10px;
+      margin:2px 1px 0 0;
+    }
+    .select-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:8px;
+      margin-top:8px;
+    }
+    .select-tile{
+      border:1px solid #e0d5c3;
+      background:#fffdf8;
+      border-radius:12px;
+      overflow:hidden;
+      position:relative;
+    }
+    .select-tile.active{
+      border:2px solid #6f8f83;
+      box-shadow:0 0 0 2px #dfe9e1;
+    }
+    .select-tile .photo{
+      aspect-ratio:1/1;
+    }
+    .select-tile-name{
+      padding:5px;
+      font-size:11px;
+      line-height:1.25;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .color-dot{
+      display:inline-block;
+      width:8px;
+      height:8px;
+      border-radius:50%;
+      margin-right:4px;
+      background:#c8bfb0;
+    }
+    .random-preview{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:8px;
+      margin-top:10px;
+    }
+    .random-card{
+      background:#fffdf8;
+      border:1px solid #e0d5c3;
+      border-radius:13px;
+      overflow:hidden;
+    }
+    .random-card .photo{
+      aspect-ratio:1/1;
+    }
+    .random-card-body{
+      padding:7px;
+      font-size:11px;
+      line-height:1.35;
+    }
+    .section-title{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:8px;
+    }
+  `;
+  document.head.appendChild(style);
+})();
+
+function normalizeColor(color){
+  return COLOR_GROUPS.includes(color) ? color : "其他";
+}
+
+function colorDot(color){
+  const map = {
+    "白/米":"#eee3d1",
+    "黑/灰":"#555555",
+    "红/粉":"#d88f9a",
+    "蓝":"#7a9ab5",
+    "绿":"#8fa99c",
+    "黄/棕":"#b9905f",
+    "紫":"#a48ab8",
+    "其他":"#c8bfb0"
+  };
+  return map[color] || "#c8bfb0";
+}
+
+function normalizeAll(){
+  clothes = clothes.map(c => ({
+    id: c.id || Date.now() + Math.random(),
+    name: c.name || "未命名单品",
+    cat: normalizeCat(c.cat),
+    color: normalizeColor(c.color),
+    price: Number(c.price || 0),
+    date: c.date || "",
+    shop: c.shop || "",
+    note: c.note || "",
+    imgKey: c.imgKey || "",
+    img: c.img || ""
+  }));
+
+  ootds = ootds.map(o => ({
+    date: o.date || today,
+    name: o.name || "今日汉服穿搭",
+    occasion: OCCASIONS.includes(o.occasion) ? o.occasion : "其他",
+    note: o.note || "",
+    items: Array.isArray(o.items) ? o.items : [],
+    imgKey: o.imgKey || "",
+    img: o.img || "",
+    outfitId: o.outfitId || null
+  }));
+
+  outfits = outfits.map(o => ({
+    id: o.id || Date.now() + Math.random(),
+    name: o.name || "未命名搭配",
+    items: Array.isArray(o.items) ? o.items : [],
+    note: o.note || "",
+    imgKey: o.imgKey || "",
+    img: o.img || ""
+  }));
+}
+
+/* ===== 衣柜：我的衣柜上移，添加单品下移，增加色系 ===== */
+function renderWardrobe(){
+  const filter = sessionStorage.getItem("filter_cat") || "全部";
+  const kw = sessionStorage.getItem("kw") || "";
+  const edit = clothes.find(c => c.id === editingCloth);
+
+  const list = clothes.filter(c => {
+    const okCat = filter === "全部" || c.cat === filter;
+    const text = `${c.name} ${c.cat} ${c.color||""} ${c.shop||""} ${c.note||""}`.toLowerCase();
+    return okCat && text.includes(kw.toLowerCase());
+  });
+
+  $("main").innerHTML = `
+    <div class="card">
+      <div class="row between">
+        <h2 style="margin:0">我的衣柜</h2>
+        <div>
+          <button class="btn secondary" onclick="setView('grid')">宫格</button>
+          <button class="btn secondary" onclick="setView('list')">列表</button>
+        </div>
+      </div>
+
+      <input placeholder="搜索名称、店铺、备注、色系" value="${esc(kw)}" oninput="sessionStorage.setItem('kw',this.value);renderWardrobe()">
+
+      <div class="toolbar">
+        ${["全部",...CATS].map(c => `
+          <button class="pill ${filter===c ? "active" : ""}" onclick="sessionStorage.setItem('filter_cat','${c}');renderWardrobe()">${c}</button>
+        `).join("")}
+      </div>
+
+      <div class="small">共 ${clothes.length} 件，当前显示 ${list.length} 件</div>
+
+      ${
+        list.length
+        ? view === "grid"
+          ? `<div class="grid">${list.map(clothGrid).join("")}</div>`
+          : list.map(clothList).join("")
+        : `<div class="empty">暂无单品</div>`
+      }
+    </div>
+
+    <div class="card">
+      <h2>${edit ? "编辑单品" : "添加单品"}</h2>
+      <input id="c-name" placeholder="名称" value="${esc(edit?.name || "")}">
+
+      <select id="c-cat">
+        ${CATS.map(c => `<option ${edit?.cat===c ? "selected" : ""}>${c}</option>`).join("")}
+      </select>
+
+      <select id="c-color">
+        ${COLOR_GROUPS.map(c => `<option ${normalizeColor(edit?.color)===c ? "selected" : ""}>${c}</option>`).join("")}
+      </select>
+
+      <input id="c-price" type="number" placeholder="价格" value="${esc(edit?.price || "")}">
+      <input id="c-date" type="date" value="${esc(edit?.date || "")}">
+      <input id="c-shop" placeholder="店铺/品牌，可不填" value="${esc(edit?.shop || "")}">
+      <textarea id="c-note" placeholder="备注，可不填">${esc(edit?.note || "")}</textarea>
+
+      ${
+        edit?.imgKey
+        ? `
+          <div class="small">当前照片：</div>
+          <div class="photo" data-imgkey="${edit.imgKey}" style="width:90px;border-radius:12px"></div>
+          <label class="check"><input id="c-del-img" type="checkbox">删除当前照片</label>
+        `
+        : ""
+      }
+
+      <input id="c-img" type="file" accept="image/*">
+      <button class="btn" onclick="saveCloth()">${edit ? "保存修改" : "保存到衣柜"}</button>
+      ${edit ? `<button class="btn secondary" onclick="editingCloth=null;renderWardrobe()">取消编辑</button>` : ""}
+    </div>
+  `;
+
+  fillImages();
+}
+
+function clothGrid(c){
+  return `
+    <div class="item">
+      <div class="photo" data-imgkey="${c.imgKey || ""}"></div>
+      <div class="body">
+        <div class="name">${esc(c.name)}</div>
+        <span class="tag">${esc(c.cat)}</span>
+        <span class="tag"><span class="color-dot" style="background:${colorDot(c.color)}"></span>${esc(normalizeColor(c.color))}</span>
+        <div>
+          <button class="btn secondary" onclick="editingCloth=${c.id};renderWardrobe()">编</button>
+          <button class="btn danger" onclick="deleteCloth(${c.id})">删</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function clothList(c){
+  return `
+    <div class="list">
+      <div class="thumb photo" data-imgkey="${c.imgKey || ""}"></div>
+      <div class="flex">
+        <div class="name">${esc(c.name)}</div>
+        <span class="tag">${esc(c.cat)}</span>
+        <span class="tag"><span class="color-dot" style="background:${colorDot(c.color)}"></span>${esc(normalizeColor(c.color))}</span>
+        <div class="small">¥${c.price || 0} · 已穿 ${wearCount(c.id)} 次</div>
+      </div>
+      <button class="btn secondary" onclick="editingCloth=${c.id};renderWardrobe()">编辑</button>
+      <button class="btn danger" onclick="deleteCloth(${c.id})">删</button>
+    </div>
+  `;
+}
+
+async function saveCloth(){
+  const name = $("c-name").value.trim();
+  if(!name){
+    alert("先填名称");
+    return;
+  }
+
+  const old = clothes.find(c => c.id === editingCloth);
+  let imgKey = old?.imgKey || "";
+
+  if($("c-del-img")?.checked){
+    delImg(imgKey);
+    imgKey = "";
+  }
+
+  const file = $("c-img").files[0];
+  if(file){
+    const data = await compressImage(file);
+    if(data){
+      imgKey = imgKey || `cloth_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+      await putImg(imgKey,data);
+    }
+  }
+
+  const item = {
+    id: old?.id || Date.now(),
+    name,
+    cat: normalizeCat($("c-cat").value),
+    color: normalizeColor($("c-color").value),
+    price: Number($("c-price").value || 0),
+    date: $("c-date").value,
+    shop: $("c-shop").value.trim(),
+    note: $("c-note").value.trim(),
+    imgKey
+  };
+
+  clothes = old ? clothes.map(c => c.id === old.id ? item : c) : [...clothes,item];
+  editingCloth = null;
+  saveMeta();
+  renderWardrobe();
+}
+
+/* ===== 搭配模块：套装模板上移，一行三个；选单品显示缩略图 ===== */
+function outfitSelectTiles(selectedIds=[]){
+  return CATS.map(cat => {
+    const arr = clothes.filter(c => c.cat === cat);
+    if(!arr.length) return "";
+    return `
+      <details ${cat==="外衫"||cat==="上衣"||cat==="吊带"||cat==="裙装" ? "open" : ""}>
+        <summary>${cat} · ${arr.length}件</summary>
+        <div class="select-grid">
+          ${arr.map(c => `
+            <div class="select-tile ${selectedIds.includes(c.id) ? "active" : ""}" data-select-id="${c.id}" onclick="toggleSelectTile(this)">
+              <div class="photo" data-imgkey="${c.imgKey || ""}"></div>
+              <div class="select-tile-name">${esc(c.name)}</div>
+              <div class="select-tile-name" style="color:#8f8475">
+                <span class="color-dot" style="background:${colorDot(c.color)}"></span>${esc(normalizeColor(c.color))}
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      </details>
+    `;
+  }).join("");
+}
+
+function toggleSelectTile(el){
+  el.classList.toggle("active");
+}
+
+function getSelectedTiles(){
+  return [...document.querySelectorAll(".select-tile.active")]
+    .map(el => Number(el.dataset.selectId))
+    .filter(Boolean);
+}
+
+function renderOutfits(){
+  const edit = outfits.find(o => o.id === editingOutfit);
+
+  $("main").innerHTML = `
+    <div class="card">
+      <div class="section-title">
+        <h2 style="margin:0">套装模板</h2>
+        <span class="small">${outfits.length} 套</span>
+      </div>
+      ${
+        outfits.length
+        ? `<div class="template-grid">${outfits.map(outfitTemplateCard).join("")}</div>`
+        : `<div class="empty">还没有保存搭配</div>`
+      }
+    </div>
+
+    <div class="card">
+      <h2>随机搭一套</h2>
+      <div class="small">固定结构：外衫/上衣 1 件 + 吊带 1 件 + 裙装 1 件。</div>
+
+      <select id="random-mode">
+        <option>不限色系</option>
+        <option>同色系</option>
+        <option>协调色</option>
+        <option>撞色</option>
+      </select>
+
+      <button class="btn" onclick="generateRandomOutfit()">随机生成</button>
+      <button class="btn secondary" onclick="generateRandomOutfit()">重新随机</button>
+
+      <div id="random-result"></div>
+    </div>
+
+    <div class="card">
+      <h2>${edit ? "编辑套装搭配" : "新增套装搭配"}</h2>
+      <input id="f-name" placeholder="搭配名称，例如：初夏青绿宋制" value="${esc(edit?.name || "")}">
+      <textarea id="f-note" placeholder="备注，可不填">${esc(edit?.note || "")}</textarea>
+
+      <div class="small">选择这套搭配包含哪些单品：</div>
+      <div class="checklist">
+        ${outfitSelectTiles(edit?.items || [])}
+      </div>
+
+      ${
+        edit?.imgKey
+        ? `
+          <div class="small">当前封面：</div>
+          <div class="photo" data-imgkey="${edit.imgKey}" style="margin:8px 0;border-radius:12px"></div>
+          <label class="check"><input id="f-del-img" type="checkbox">删除当前封面</label>
+        `
+        : ""
+      }
+
+      <input id="f-img" type="file" accept="image/*">
+      <button class="btn" onclick="saveOutfit()">${edit ? "保存修改" : "保存搭配"}</button>
+      ${edit ? `<button class="btn secondary" onclick="editingOutfit=null;renderOutfits()">取消编辑</button>` : ""}
+    </div>
+
+    <div class="version">${V41_VERSION}</div>
+  `;
+
+  fillImages();
+}
+
+function outfitTemplateCard(o){
+  const names = itemNames(o.items);
+  return `
+    <div class="template-card">
+      <div class="photo" data-imgkey="${o.imgKey || ""}"></div>
+      <div class="template-card-body">
+        <div class="name">${esc(o.name)}</div>
+        <div class="small">${o.items.length} 件</div>
+        <button class="btn" onclick="useOutfitToday(${o.id})">今日</button>
+        <button class="btn secondary" onclick="editingOutfit=${o.id};renderOutfits()">编</button>
+        <button class="btn danger" onclick="deleteOutfit(${o.id})">删</button>
+      </div>
+    </div>
+  `;
+}
+
+async function saveOutfit(){
+  const name = $("f-name").value.trim();
+  if(!name){
+    alert("先填搭配名称");
+    return;
+  }
+
+  const selected = getSelectedTiles();
+
+  if(!selected.length){
+    alert("至少选择一件单品");
+    return;
+  }
+
+  const old = outfits.find(o => o.id === editingOutfit);
+  let imgKey = old?.imgKey || "";
+
+  if($("f-del-img")?.checked){
+    delImg(imgKey);
+    imgKey = "";
+  }
+
+  const file = $("f-img").files[0];
+  if(file){
+    const data = await compressImage(file);
+    if(data){
+      imgKey = imgKey || `outfit_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+      await putImg(imgKey,data);
+    }
+  }
+
+  const data = {
+    id: old?.id || Date.now(),
+    name,
+    note: $("f-note").value.trim(),
+    items: selected,
+    imgKey
+  };
+
+  outfits = old ? outfits.map(o => o.id === old.id ? data : o) : [...outfits,data];
+  editingOutfit = null;
+  saveMeta();
+  renderOutfits();
+}
+
+/* ===== 随机搭配：色系规则 ===== */
+function randomOne(arr){
+  if(!arr.length) return null;
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function compatibleColors(base, mode){
+  base = normalizeColor(base);
+
+  if(mode === "不限色系"){
+    return COLOR_GROUPS;
+  }
+
+  if(mode === "同色系"){
+    return [base, "白/米", "黑/灰", "其他"];
+  }
+
+  const harmony = {
+    "白/米":["白/米","蓝","绿","红/粉","黄/棕"],
+    "黑/灰":["黑/灰","白/米","红/粉","蓝","紫"],
+    "红/粉":["红/粉","白/米","黑/灰"],
+    "蓝":["蓝","白/米","黑/灰"],
+    "绿":["绿","白/米","黄/棕"],
+    "黄/棕":["黄/棕","白/米","绿"],
+    "紫":["紫","白/米","黑/灰"],
+    "其他":["其他","白/米","黑/灰"]
+  };
+
+  const contrast = {
+    "白/米":["蓝","绿","红/粉","黑/灰"],
+    "黑/灰":["红/粉","白/米","蓝"],
+    "红/粉":["绿","黑/灰","白/米"],
+    "蓝":["黄/棕","白/米"],
+    "绿":["红/粉","白/米","黄/棕"],
+    "黄/棕":["蓝","紫","绿"],
+    "紫":["黄/棕","白/米","黑/灰"],
+    "其他":["白/米","黑/灰"]
+  };
+
+  if(mode === "协调色"){
+    return harmony[base] || COLOR_GROUPS;
+  }
+
+  if(mode === "撞色"){
+    return contrast[base] || COLOR_GROUPS;
+  }
+
+  return COLOR_GROUPS;
+}
+
+function pickByColor(arr, allowed){
+  if(!arr.length) return null;
+
+  const preferred = arr.filter(c => allowed.includes(normalizeColor(c.color)));
+  if(preferred.length) return randomOne(preferred);
+
+  return randomOne(arr);
+}
+
+function generateRandomOutfit(){
+  const mode = $("random-mode") ? $("random-mode").value : "不限色系";
+  randomMode = mode;
+
+  const skirts = clothes.filter(c => c.cat === "裙装");
+  const camis = clothes.filter(c => c.cat === "吊带");
+  const tops = clothes.filter(c => c.cat === "外衫" || c.cat === "上衣");
+
+  if(!skirts.length){
+    alert("还没有裙装，无法生成完整搭配。");
+    return;
+  }
+
+  const skirt = randomOne(skirts);
+  const allowed = compatibleColors(skirt.color, mode);
+
+  const top = pickByColor(tops, allowed);
+  const cami = pickByColor(camis, allowed);
+
+  randomPicked = [top, cami, skirt].filter(Boolean).map(c => c.id);
+
+  renderRandomResult();
+}
+
+function renderRandomResult(){
+  const result = $("random-result");
+  if(!result) return;
+
+  if(!randomPicked.length){
+    result.innerHTML = "";
+    return;
+  }
+
+  const items = randomPicked.map(id => getCloth(id)).filter(Boolean);
+
+  result.innerHTML = `
+    <hr>
+    <div class="small">随机结果 · ${esc(randomMode)}</div>
+    <div class="random-preview">
+      ${items.map(c => `
+        <div class="random-card">
+          <div class="photo" data-imgkey="${c.imgKey || ""}"></div>
+          <div class="random-card-body">
+            <div>${esc(c.name)}</div>
+            <div style="color:#8f8475">${esc(c.cat)} · ${esc(normalizeColor(c.color))}</div>
+          </div>
+        </div>
+      `).join("")}
+    </div>
+
+    <button class="btn" onclick="saveRandomAsOutfit()">保存为搭配</button>
+    <button class="btn secondary" onclick="useRandomToday()">用于今日穿搭</button>
+  `;
+
+  fillImages();
+}
+
+function saveRandomAsOutfit(){
+  if(!randomPicked.length){
+    alert("请先随机生成一套");
+    return;
+  }
+
+  const data = {
+    id: Date.now(),
+    name: "随机搭配",
+    note: `由随机搭一套生成 · ${randomMode}`,
+    items: [...randomPicked],
+    imgKey: ""
+  };
+
+  outfits.push(data);
+  saveMeta();
+  alert("已保存为搭配。");
+  renderOutfits();
+}
+
+function useRandomToday(){
+  if(!randomPicked.length){
+    alert("请先随机生成一套");
+    return;
+  }
+
+  const old = ootds.find(o => o.date === today);
+
+  const data = {
+    date: today,
+    name: "随机搭配",
+    occasion: old?.occasion || "其他",
+    note: `由随机搭一套生成 · ${randomMode}`,
+    items: [...randomPicked],
+    imgKey: old?.imgKey || "",
+    outfitId: null
+  };
+
+  ootds = ootds.filter(o => o.date !== today);
+  ootds.push(data);
+
+  tab = "today";
+  saveMeta();
+  render();
+}
+
+/* 启动补丁 */
+normalizeAll();
+saveMeta();
+
+if(tab === "wardrobe" || tab === "outfits"){
+  render();
+}
+</script>
 </body>
 </html>
 
