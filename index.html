@@ -16,10 +16,6 @@
 <meta name="apple-mobile-web-app-title" content="汉服手账">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
-
-<meta name="theme-color" content="#f8f3e9">
-<meta name="description" content="记录每日汉服穿搭、衣柜单品和穿着统计的手账 App">
-
 <style>
 *{box-sizing:border-box}
 body{
@@ -87,11 +83,6 @@ main{padding:14px}
   font-weight:500;
   letter-spacing:1px;
 }
-.card h3{
-  margin:0 0 8px;
-  font-size:15px;
-  font-weight:500;
-}
 .muted,.small{
   color:#8f8475;
   font-size:12px;
@@ -127,6 +118,9 @@ main{padding:14px}
   background:transparent;
   border:1px solid #dccdb8;
   color:#756958;
+}
+.btn:disabled{
+  opacity:.55;
 }
 input,select,textarea{
   width:100%;
@@ -232,8 +226,8 @@ textarea{
   border-bottom:1px dashed #d8cbb8;
 }
 .list-thumb{
-  width:56px;
-  height:56px;
+  width:58px;
+  height:58px;
   border-radius:12px;
   overflow:hidden;
   flex-shrink:0;
@@ -367,6 +361,19 @@ hr{
   color:#756958;
   line-height:1.6;
 }
+.preview{
+  width:92px;
+  height:92px;
+  border-radius:14px;
+  overflow:hidden;
+  background:#eee5d7;
+  margin:8px 0;
+}
+.warning{
+  color:#b86b64;
+  font-size:12px;
+  line-height:1.6;
+}
 </style>
 </head>
 
@@ -401,6 +408,8 @@ hr{
 </div>
 
 <script>
+const APP_VERSION = "v2.2-safe-edit";
+
 const $ = id => document.getElementById(id);
 
 const STORAGE_CLOTHES = "hanfu_clothes";
@@ -418,6 +427,8 @@ let viewMode = localStorage.getItem(STORAGE_VIEW) || "list";
 let clothes = safeParse(localStorage.getItem(STORAGE_CLOTHES), []);
 let ootds = safeParse(localStorage.getItem(STORAGE_OOTDS), []);
 let formBackTab = "today";
+let editingClothId = null;
+let isSaving = false;
 
 let calDate = new Date();
 let calYear = calDate.getFullYear();
@@ -482,15 +493,39 @@ function normalizeAll(){
   }));
 }
 
+function getStorageSizeMB(){
+  let total = 0;
+  for(let key in localStorage){
+    if(Object.prototype.hasOwnProperty.call(localStorage, key)){
+      total += (localStorage.getItem(key) || "").length;
+    }
+  }
+  return (total / 1024 / 1024).toFixed(2);
+}
+
 function save(){
-  localStorage.setItem(STORAGE_CLOTHES, JSON.stringify(clothes));
-  localStorage.setItem(STORAGE_OOTDS, JSON.stringify(ootds));
-  localStorage.setItem(STORAGE_TAB, tab);
-  localStorage.setItem(STORAGE_VIEW, viewMode);
+  try{
+    localStorage.setItem(STORAGE_CLOTHES, JSON.stringify(clothes));
+    localStorage.setItem(STORAGE_OOTDS, JSON.stringify(ootds));
+    localStorage.setItem(STORAGE_TAB, tab);
+    localStorage.setItem(STORAGE_VIEW, viewMode);
+    return true;
+  }catch(e){
+    console.error("保存失败：", e);
+    alert(
+      "保存失败：浏览器本地空间可能满了。\n\n" +
+      "最常见原因是照片太大或照片太多。\n\n" +
+      "当前本地数据约：" + getStorageSizeMB() + "MB\n\n" +
+      "建议先导出备份，或减少照片。"
+    );
+    return false;
+  }
 }
 
 function setTab(t){
+  if(isSaving) return;
   tab = t;
+  editingClothId = null;
   save();
   render();
 }
@@ -501,19 +536,78 @@ function setViewMode(mode){
   renderWardrobe();
 }
 
+function setButtonLoading(id, text){
+  const btn = $(id);
+  if(btn){
+    btn.disabled = true;
+    btn.innerText = text || "处理中...";
+  }
+}
+
+function clearButtonLoading(id, text){
+  const btn = $(id);
+  if(btn){
+    btn.disabled = false;
+    btn.innerText = text;
+  }
+}
+
+/* 图片压缩：把手机大图压成较小 JPEG */
 function fileToBase64(file, cb){
   if(!file){
     cb("");
     return;
   }
 
-  const reader = new FileReader();
-  reader.onload = e => cb(e.target.result);
-  reader.onerror = () => {
-    alert("图片读取失败，可以换一张试试。");
+  if(!file.type.startsWith("image/")){
+    alert("请选择图片文件。");
+    cb("");
+    return;
+  }
+
+  const img = new Image();
+  const url = URL.createObjectURL(file);
+
+  img.onload = function(){
+    URL.revokeObjectURL(url);
+
+    const maxSide = 720;
+    let w = img.width;
+    let h = img.height;
+
+    if(w > h && w > maxSide){
+      h = Math.round(h * maxSide / w);
+      w = maxSide;
+    }else if(h >= w && h > maxSide){
+      w = Math.round(w * maxSide / h);
+      h = maxSide;
+    }
+
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(img, 0, 0, w, h);
+
+    let quality = 0.72;
+    let dataUrl = canvas.toDataURL("image/jpeg", quality);
+
+    while(dataUrl.length > 260 * 1024 && quality > 0.38){
+      quality -= 0.08;
+      dataUrl = canvas.toDataURL("image/jpeg", quality);
+    }
+
+    cb(dataUrl);
+  };
+
+  img.onerror = function(){
+    URL.revokeObjectURL(url);
+    alert("图片读取失败，可以换一张图试试。");
     cb("");
   };
-  reader.readAsDataURL(file);
+
+  img.src = url;
 }
 
 function formatDate(d){
@@ -589,6 +683,7 @@ function renderToday(){
 function renderWardrobe(){
   const selectedCat = sessionStorage.getItem("hanfu_filter_cat") || "全部";
   const keyword = sessionStorage.getItem("hanfu_search") || "";
+  const editing = clothes.find(c => c.id === editingClothId);
 
   const filtered = clothes.filter(c => {
     const okCat = selectedCat === "全部" || c.cat === selectedCat;
@@ -599,21 +694,43 @@ function renderWardrobe(){
 
   $("main").innerHTML = `
     <div class="card">
-      <h2>添加汉服单品</h2>
+      <h2>${editing ? "编辑汉服单品" : "添加汉服单品"}</h2>
 
-      <input id="c-name" placeholder="名称，例如：灰蓝百迭裙 / 白色飞机袖 / 茶色吊带">
+      <input id="c-name" placeholder="名称，例如：灰蓝百迭裙 / 白色飞机袖 / 茶色吊带" value="${esc(editing ? editing.name : "")}">
 
       <select id="c-cat">
-        ${CATEGORIES.map(c => `<option>${c}</option>`).join("")}
+        ${CATEGORIES.map(c => `<option ${editing && editing.cat === c ? "selected" : ""}>${c}</option>`).join("")}
       </select>
 
-      <input id="c-price" type="number" placeholder="价格，可不填">
-      <input id="c-date" type="date">
-      <input id="c-shop" placeholder="店铺/品牌，可不填">
-      <textarea id="c-note" placeholder="备注，比如版型、尺码、是否掉色等，可不填"></textarea>
+      <input id="c-price" type="number" placeholder="价格，可不填" value="${editing ? esc(editing.price) : ""}">
+      <input id="c-date" type="date" value="${editing ? esc(editing.date) : ""}">
+      <input id="c-shop" placeholder="店铺/品牌，可不填" value="${editing ? esc(editing.shop) : ""}">
+      <textarea id="c-note" placeholder="备注，比如版型、尺码、是否掉色等，可不填">${editing ? esc(editing.note) : ""}</textarea>
+
+      ${
+        editing && editing.img
+        ? `
+          <div class="small">当前照片：</div>
+          <div class="preview photo"><img src="${editing.img}"></div>
+          <label class="checkline">
+            <input id="c-remove-img" type="checkbox">
+            删除当前照片
+          </label>
+        `
+        : ""
+      }
+
+      <div class="small">${editing ? "如需替换照片，请选择新图片；不选则保留原照片。" : "选择照片后会自动压缩，避免保存失败。"}</div>
       <input id="c-img" type="file" accept="image/*">
 
-      <button class="btn" onclick="addCloth()">保存到衣柜</button>
+      <button id="cloth-save-btn" class="btn" onclick="saveCloth()">${editing ? "保存修改" : "保存到衣柜"}</button>
+      ${
+        editing
+        ? `<button class="btn secondary" onclick="cancelEditCloth()">取消编辑</button>`
+        : ""
+      }
+
+      <div class="warning">提示：如果一次添加很多带照片的衣服，建议每添加 3-5 件就去「统计」导出一次备份。</div>
     </div>
 
     <div class="card">
@@ -671,6 +788,7 @@ function renderClothGrid(c){
         <div class="price">¥${Number(c.price || 0)}</div>
         <div class="small">穿 ${count} 次</div>
         <div class="small">单次 ¥${cost}</div>
+        <button class="btn secondary" style="padding:6px 9px;font-size:12px" onclick="editCloth(${c.id})">编辑</button>
         <button class="btn danger" style="padding:6px 9px;font-size:12px" onclick="deleteCloth(${c.id})">删除</button>
       </div>
     </div>
@@ -692,33 +810,102 @@ function renderClothList(c){
         </div>
         <div class="small">¥${Number(c.price || 0)} · 已穿 ${count} 次 · 单次 ¥${cost}</div>
       </div>
-      <button class="btn danger" style="padding:7px 10px;font-size:12px" onclick="deleteCloth(${c.id})">删</button>
+      <div>
+        <button class="btn secondary" style="padding:7px 10px;font-size:12px" onclick="editCloth(${c.id})">编辑</button>
+        <button class="btn danger" style="padding:7px 10px;font-size:12px" onclick="deleteCloth(${c.id})">删</button>
+      </div>
     </div>
   `;
 }
 
-function addCloth(){
+function editCloth(id){
+  editingClothId = id;
+  renderWardrobe();
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+function cancelEditCloth(){
+  editingClothId = null;
+  renderWardrobe();
+}
+
+function saveCloth(){
+  if(isSaving) return;
+
   const name = $("c-name").value.trim();
+
   if(!name){
     alert("先填名称");
     return;
   }
 
+  isSaving = true;
+  setButtonLoading("cloth-save-btn", "保存中...");
+
+  const oldClothes = JSON.parse(JSON.stringify(clothes));
   const file = $("c-img").files[0];
+  const editing = clothes.find(c => c.id === editingClothId);
+  const removeImg = $("c-remove-img") && $("c-remove-img").checked;
 
   fileToBase64(file, img => {
-    clothes.push({
-      id: Date.now(),
+    let finalImg = "";
+
+    if(editing){
+      finalImg = editing.img || "";
+      if(removeImg) finalImg = "";
+      if(img) finalImg = img;
+    }else{
+      finalImg = img || "";
+    }
+
+    const item = {
+      id: editing ? editing.id : Date.now(),
       name,
       cat: normalizeCat($("c-cat").value),
       price: Number($("c-price").value || 0),
       date: $("c-date").value,
       shop: $("c-shop").value.trim(),
       note: $("c-note").value.trim(),
-      img
-    });
+      img: finalImg
+    };
 
+    if(editing){
+      clothes = clothes.map(c => c.id === editing.id ? item : c);
+    }else{
+      clothes.push(item);
+    }
+
+    if(save()){
+      alert(editing ? "修改已保存。" : "已保存到衣柜。");
+      editingClothId = null;
+      isSaving = false;
+      renderWardrobe();
+      return;
+    }
+
+    if(item.img){
+      item.img = "";
+
+      if(editing){
+        clothes = clothes.map(c => c.id === item.id ? item : c);
+      }else{
+        clothes = clothes.map(c => c.id === item.id ? item : c);
+      }
+
+      if(save()){
+        alert("文字信息已保存，但照片太大/空间不足，所以这次没有保存照片。");
+        editingClothId = null;
+        isSaving = false;
+        renderWardrobe();
+        return;
+      }
+    }
+
+    clothes = oldClothes;
     save();
+
+    alert("这件单品没有保存成功。建议先导出备份，或删除一些大照片后再试。");
+    isSaving = false;
     renderWardrobe();
   });
 }
@@ -726,19 +913,31 @@ function addCloth(){
 function deleteCloth(id){
   if(!confirm("确定删除这件单品吗？相关穿搭记录里也会移除它。")) return;
 
+  const oldClothes = JSON.parse(JSON.stringify(clothes));
+  const oldOotds = JSON.parse(JSON.stringify(ootds));
+
   clothes = clothes.filter(c => c.id !== id);
   ootds = ootds.map(o => ({
     ...o,
     items: o.items.filter(i => i !== id)
   }));
 
-  save();
+  if(!save()){
+    clothes = oldClothes;
+    ootds = oldOotds;
+    save();
+    alert("删除失败，已恢复原数据。");
+  }
+
+  if(editingClothId === id) editingClothId = null;
   render();
 }
 
 /* 穿搭表单 */
 
 function showOotdForm(date, backTab){
+  if(isSaving) return;
+
   formBackTab = backTab || tab || "today";
 
   if(clothes.length === 0){
@@ -775,15 +974,23 @@ function showOotdForm(date, backTab){
         `).join("")}
       </div>
 
-      <input id="o-img" type="file" accept="image/*">
-
       ${
         old && old.img
-        ? `<div class="photo" style="margin:10px 0"><img src="${old.img}"></div>`
+        ? `
+          <div class="small">当前穿搭照片：</div>
+          <div class="photo" style="margin:10px 0"><img src="${old.img}"></div>
+          <label class="checkline">
+            <input id="o-remove-img" type="checkbox">
+            删除当前穿搭照片
+          </label>
+        `
         : ""
       }
 
-      <button class="btn" onclick="saveOotd('${date}')">保存穿搭</button>
+      <div class="small">选择新照片则会替换原照片；不选则保留原照片。</div>
+      <input id="o-img" type="file" accept="image/*">
+
+      <button id="ootd-save-btn" class="btn" onclick="saveOotd('${date}')">保存穿搭</button>
       <button class="btn secondary" onclick="cancelOotdForm()">返回</button>
       ${
         old
@@ -795,12 +1002,15 @@ function showOotdForm(date, backTab){
 }
 
 function cancelOotdForm(){
+  if(isSaving) return;
   tab = formBackTab || "today";
   save();
   render();
 }
 
 function saveOotd(date){
+  if(isSaving) return;
+
   const selected = Array.from(document.querySelectorAll(".checkline input:checked"))
     .map(i => Number(i.value));
 
@@ -809,24 +1019,61 @@ function saveOotd(date){
     return;
   }
 
+  isSaving = true;
+  setButtonLoading("ootd-save-btn", "保存中...");
+
   const old = ootds.find(o => o.date === date);
+  const oldOotds = JSON.parse(JSON.stringify(ootds));
   const file = $("o-img").files[0];
+  const removeImg = $("o-remove-img") && $("o-remove-img").checked;
 
   fileToBase64(file, img => {
+    let finalImg = old ? (old.img || "") : "";
+    if(removeImg) finalImg = "";
+    if(img) finalImg = img;
+
     const data = {
       date,
       name: $("o-name").value.trim() || "今日汉服穿搭",
       occasion: $("o-occasion").value,
       note: $("o-note").value.trim(),
       items: selected,
-      img: img || (old ? old.img : "")
+      img: finalImg
     };
 
     ootds = ootds.filter(o => o.date !== date);
     ootds.push(data);
 
-    tab = formBackTab || "today";
+    if(save()){
+      tab = formBackTab || "today";
+      save();
+      isSaving = false;
+      render();
+      return;
+    }
+
+    if(data.img){
+      data.img = old ? old.img : "";
+
+      ootds = ootds.filter(o => o.date !== date);
+      ootds.push(data);
+
+      if(save()){
+        alert("穿搭文字已保存，但新照片太大/空间不足，所以没有保存新照片。");
+        tab = formBackTab || "today";
+        save();
+        isSaving = false;
+        render();
+        return;
+      }
+    }
+
+    ootds = oldOotds;
     save();
+
+    alert("这条穿搭没有保存成功。建议先导出备份，或减少照片后再试。");
+    tab = formBackTab || "today";
+    isSaving = false;
     render();
   });
 }
@@ -834,9 +1081,16 @@ function saveOotd(date){
 function deleteOotd(date){
   if(!confirm("确定删除这天穿搭记录吗？")) return;
 
+  const oldOotds = JSON.parse(JSON.stringify(ootds));
   ootds = ootds.filter(o => o.date !== date);
+
+  if(!save()){
+    ootds = oldOotds;
+    save();
+    alert("删除失败，已恢复原数据。");
+  }
+
   tab = formBackTab || "today";
-  save();
   render();
 }
 
@@ -945,7 +1199,7 @@ function changeMonth(delta){
 function getBackupData(){
   return {
     app: "hanfu-ootd",
-    version: "2.0",
+    version: APP_VERSION,
     exportedAt: new Date().toISOString(),
     clothes,
     ootds,
@@ -1009,9 +1263,13 @@ function importBackupFile(input){
       tab = data.tab || "today";
 
       normalizeAll();
-      save();
 
-      alert("导入成功。");
+      if(save()){
+        alert("导入成功。");
+      }else{
+        alert("导入失败：备份内容可能太大，当前浏览器存不下。");
+      }
+
       render();
 
     }catch(err){
@@ -1034,6 +1292,7 @@ function clearAllData(){
   clothes = [];
   ootds = [];
   tab = "today";
+  editingClothId = null;
 
   save();
   alert("已清空全部数据。");
@@ -1102,6 +1361,12 @@ function renderStats(){
 
       <hr>
 
+      <div class="small">
+        当前版本：${APP_VERSION}<br>
+        当前本地数据大小约：${getStorageSizeMB()} MB<br>
+        如果接近 4-5MB，建议减少照片或先导出备份。
+      </div>
+
       <button class="btn danger" onclick="clearAllData()">清空全部数据</button>
     </div>
 
@@ -1140,5 +1405,26 @@ function renderStats(){
 
 render();
 </script>
+
+<script>
+/* 清理旧 PWA 缓存，避免 GitHub Pages 更新后还打开旧代码。
+   这不会删除 localStorage 里的衣柜数据。 */
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.getRegistrations().then(function(registrations) {
+    registrations.forEach(function(registration) {
+      registration.unregister();
+    });
+  });
+}
+
+if ("caches" in window) {
+  caches.keys().then(function(keys) {
+    keys.forEach(function(key) {
+      caches.delete(key);
+    });
+  });
+}
+</script>
+
 </body>
 </html>
