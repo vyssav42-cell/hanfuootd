@@ -2,26 +2,22 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>汉服穿搭手账</title>
+
 <meta name="theme-color" content="#f8f3e9">
 <meta name="description" content="记录每日汉服穿搭、衣柜单品和穿着统计的手账 App">
 
-<link rel="manifest" href="./manifest.webmanifest">
-<link rel="icon" href="./icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="./icon.svg">
-
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="汉服手账">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-  
 <style>
 *{box-sizing:border-box}
 body{
   margin:0;
   background:#e9e1d3;
-  font-family:"PingFang SC","Microsoft YaHei",sans-serif;
+  font-family:"PingFang SC","Microsoft YaHei",Arial,sans-serif;
   color:#2b2723;
+}
+button,input,select,textarea{
+  font-family:inherit;
 }
 .app{
   max-width:430px;
@@ -29,12 +25,15 @@ body{
   min-height:100vh;
   background:#f8f3e9;
   position:relative;
-  padding-bottom:86px;
+  padding-bottom:92px;
 }
 header{
-  padding:34px 20px 16px;
-  background:linear-gradient(#f8f3e9,#f4ecdf);
+  padding:32px 18px 14px;
+  background:linear-gradient(#f9f4ea,#f4ecdf);
   border-bottom:1px solid #e1d6c4;
+  position:sticky;
+  top:0;
+  z-index:5;
 }
 .title{
   display:flex;
@@ -43,8 +42,8 @@ header{
 }
 .title h1{
   margin:0;
-  font-size:23px;
-  letter-spacing:4px;
+  font-size:22px;
+  letter-spacing:3px;
   font-weight:400;
 }
 .subtitle{
@@ -59,6 +58,76 @@ header{
   font-size:12px;
   writing-mode:vertical-rl;
   letter-spacing:2px;
+  border-radius:3px;
+}
+main{padding:14px}
+.card{
+  background:#fffaf1;
+  border:1px solid #e1d6c4;
+  border-radius:16px;
+  padding:14px;
+  margin-bottom:13px;
+  box-shadow:0 5px 14px rgba(102,80,50,.05);
+}
+.card h2{
+  margin:0 0 10px;
+  font-size:17px;
+  font-weight:500;
+  letter-spacing:1px;
+}
+.card h3{
+  margin:0 0 8px;
+  font-size:15px;
+  font-weight:500;
+}
+.muted,.small{
+  color:#8f8475;
+  font-size:12px;
+}
+.small{line-height:1.6}
+.row{
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+.row.between{
+  justify-content:space-between;
+}
+.btn{
+  border:0;
+  background:#6f8f83;
+  color:white;
+  padding:9px 13px;
+  border-radius:999px;
+  font-size:13px;
+  margin:4px 4px 4px 0;
+  cursor:pointer;
+}
+.btn.secondary{
+  background:#eadfcd;
+  color:#5d5246;
+}
+.btn.danger{
+  background:#b86b64;
+  color:#fff;
+}
+.btn.ghost{
+  background:transparent;
+  border:1px solid #dccdb8;
+  color:#756958;
+}
+input,select,textarea{
+  width:100%;
+  border:1px solid #ddcfba;
+  background:#fffdf8;
+  border-radius:12px;
+  padding:10px;
+  margin:6px 0;
+  font-size:14px;
+}
+textarea{
+  min-height:68px;
+  resize:vertical;
 }
 .tabs{
   position:fixed;
@@ -70,8 +139,8 @@ header{
   display:flex;
   background:#f8f3e9;
   border-top:1px solid #ddd0bc;
-  padding:8px 0 18px;
-  z-index:10;
+  padding:8px 0 calc(16px + env(safe-area-inset-bottom));
+  z-index:20;
 }
 .tabs button{
   flex:1;
@@ -83,60 +152,24 @@ header{
   flex-direction:column;
   gap:3px;
   align-items:center;
+  cursor:pointer;
 }
-.tabs button.active{color:#66877a;font-weight:600}
-main{padding:16px}
-.card{
-  background:#fffaf1;
-  border:1px solid #e1d6c4;
-  border-radius:16px;
-  padding:15px;
-  margin-bottom:14px;
-  box-shadow:0 5px 14px rgba(102,80,50,.05);
+.tabs button.active{
+  color:#66877a;
+  font-weight:600;
 }
-.card h2{
-  margin:0 0 10px;
+.icon{
   font-size:17px;
-  font-weight:500;
-  letter-spacing:1px;
 }
-.muted{color:#8f8475;font-size:12px}
-.row{display:flex;gap:10px;align-items:center}
-.btn{
-  border:0;
-  background:#6f8f83;
-  color:white;
-  padding:10px 14px;
-  border-radius:999px;
-  font-size:13px;
-}
-.btn.secondary{
-  background:#eadfcd;
-  color:#5d5246;
-}
-.btn.danger{
-  background:#b86b64;
-}
-input,select,textarea{
-  width:100%;
-  border:1px solid #ddcfba;
-  background:#fffdf8;
-  border-radius:12px;
-  padding:10px;
-  margin:6px 0;
-  font-size:14px;
-  font-family:inherit;
-}
-textarea{min-height:70px;resize:vertical}
 .grid{
   display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px;
+  grid-template-columns:repeat(3,1fr);
+  gap:9px;
 }
 .item{
   border:1px solid #e0d5c3;
   background:#fffdf8;
-  border-radius:14px;
+  border-radius:13px;
   overflow:hidden;
 }
 .photo{
@@ -148,41 +181,79 @@ textarea{min-height:70px;resize:vertical}
   justify-content:center;
   overflow:hidden;
   color:#9a8c79;
+  font-size:12px;
 }
 .photo img{
   width:100%;
   height:100%;
   object-fit:cover;
 }
-.item-body{padding:10px}
+.item-body{
+  padding:8px;
+}
 .item-name{
-  font-size:14px;
+  font-size:13px;
   margin-bottom:4px;
+  line-height:1.35;
+  word-break:break-word;
 }
 .tag{
   display:inline-block;
-  padding:3px 7px;
+  padding:2px 6px;
   border-radius:999px;
   background:#edf1ec;
   color:#6f8f83;
-  font-size:11px;
-  margin-right:4px;
+  font-size:10px;
+  margin-right:3px;
+  margin-bottom:3px;
 }
-.price{font-size:12px;color:#9a7c5a;margin-top:4px}
-.small{
+.price{
   font-size:12px;
-  color:#8d8171;
+  color:#9a7c5a;
+  margin-top:3px;
+}
+.list-item{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  padding:10px 0;
+  border-bottom:1px dashed #d8cbb8;
+}
+.list-thumb{
+  width:56px;
+  height:56px;
+  border-radius:12px;
+  overflow:hidden;
+  flex-shrink:0;
+  background:#eee5d7;
+}
+.list-main{
+  flex:1;
+  min-width:0;
+}
+.list-main .item-name{
+  font-size:14px;
+}
+.toolbar{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-bottom:10px;
+}
+.toolbar button{
+  margin:0;
 }
 .ootd{
   border-left:4px solid #8fa99c;
 }
 .checklist{
-  max-height:230px;
+  max-height:250px;
   overflow:auto;
   border:1px solid #e2d5c2;
   border-radius:12px;
   padding:8px;
   background:#fffdf8;
+  margin:8px 0;
 }
 .checkline{
   display:flex;
@@ -191,7 +262,10 @@ textarea{min-height:70px;resize:vertical}
   padding:7px 2px;
   font-size:14px;
 }
-.checkline input{width:auto;margin:0}
+.checkline input{
+  width:auto;
+  margin:0;
+}
 .calendar{
   display:grid;
   grid-template-columns:repeat(7,1fr);
@@ -201,7 +275,10 @@ textarea{min-height:70px;resize:vertical}
   text-align:center;
   font-size:12px;
 }
-.day-head{color:#9a8c79;padding:5px 0}
+.day-head{
+  color:#9a8c79;
+  padding:5px 0;
+}
 .day{
   aspect-ratio:1;
   border:1px solid #e0d5c3;
@@ -209,13 +286,18 @@ textarea{min-height:70px;resize:vertical}
   background:#fffdf8;
   padding-top:5px;
   position:relative;
+  cursor:pointer;
 }
 .day.has{
   background:#eff4ef;
   border-color:#8fa99c;
 }
+.day.today{
+  outline:2px solid #b86b64;
+}
 .dot{
-  width:6px;height:6px;
+  width:6px;
+  height:6px;
   background:#b86b64;
   border-radius:50%;
   position:absolute;
@@ -242,7 +324,7 @@ textarea{min-height:70px;resize:vertical}
 .empty{
   text-align:center;
   color:#9b907f;
-  padding:28px 10px;
+  padding:24px 10px;
   font-size:13px;
 }
 hr{
@@ -250,8 +332,32 @@ hr{
   border-top:1px dashed #d8cbb8;
   margin:12px 0;
 }
+.pill{
+  border:1px solid #ddcfba;
+  background:#fffdf8;
+  color:#6d6254;
+  padding:6px 10px;
+  border-radius:999px;
+  font-size:12px;
+  cursor:pointer;
+}
+.pill.active{
+  background:#6f8f83;
+  color:#fff;
+  border-color:#6f8f83;
+}
+.notice{
+  background:#f5eadb;
+  border:1px dashed #d8c5aa;
+  border-radius:12px;
+  padding:10px;
+  font-size:12px;
+  color:#756958;
+  line-height:1.6;
+}
 </style>
 </head>
+
 <body>
 <div class="app">
   <header>
@@ -267,34 +373,108 @@ hr{
   <main id="main"></main>
 
   <nav class="tabs">
-    <button onclick="setTab('today')" id="tab-today">今日<br>穿搭</button>
-    <button onclick="setTab('wardrobe')" id="tab-wardrobe">衣柜<br>单品</button>
-    <button onclick="setTab('calendar')" id="tab-calendar">日历<br>记录</button>
-    <button onclick="setTab('stats')" id="tab-stats">统计<br>花费</button>
+    <button onclick="setTab('today')" id="tab-today">
+      <span class="icon">✦</span><span>今日</span>
+    </button>
+    <button onclick="setTab('wardrobe')" id="tab-wardrobe">
+      <span class="icon">衣</span><span>衣柜</span>
+    </button>
+    <button onclick="setTab('calendar')" id="tab-calendar">
+      <span class="icon">日</span><span>日历</span>
+    </button>
+    <button onclick="setTab('stats')" id="tab-stats">
+      <span class="icon">算</span><span>统计</span>
+    </button>
   </nav>
 </div>
 
 <script>
 const $ = id => document.getElementById(id);
-const todayKey = new Date().toISOString().slice(0,10);
 
-let tab = localStorage.getItem("hanfu_tab") || "today";
-let clothes = JSON.parse(localStorage.getItem("hanfu_clothes") || "[]");
-let ootds = JSON.parse(localStorage.getItem("hanfu_ootds") || "[]");
+const STORAGE_CLOTHES = "hanfu_clothes";
+const STORAGE_OOTDS = "hanfu_ootds";
+const STORAGE_TAB = "hanfu_tab";
+const STORAGE_VIEW = "hanfu_view_mode";
 
-if(clothes.length === 0){
-  clothes = [
-    {id:1,name:"灰蓝百迭裙",cat:"裙装",price:320,date:"2026-03-10",shop:"",note:"",img:""},
-    {id:2,name:"白色飞机袖",cat:"上衣",price:158,date:"2026-05-01",shop:"",note:"",img:""},
-    {id:3,name:"茶色吊带",cat:"上衣",price:128,date:"2026-04-15",shop:"",note:"",img:""}
-  ];
-  save();
+const CATEGORIES = ["外衫","吊带","裙装","外套","鞋履","包袋","其他"];
+
+const nowDate = new Date();
+const todayKey = localDateKey(nowDate);
+
+let tab = localStorage.getItem(STORAGE_TAB) || "today";
+let viewMode = localStorage.getItem(STORAGE_VIEW) || "list";
+let clothes = safeParse(localStorage.getItem(STORAGE_CLOTHES), []);
+let ootds = safeParse(localStorage.getItem(STORAGE_OOTDS), []);
+let formBackTab = "today";
+
+let calDate = new Date();
+let calYear = calDate.getFullYear();
+let calMonth = calDate.getMonth();
+
+normalizeAll();
+save();
+
+function safeParse(text, fallback){
+  try{
+    const v = JSON.parse(text || "");
+    return Array.isArray(v) ? v : fallback;
+  }catch(e){
+    return fallback;
+  }
+}
+
+function localDateKey(d){
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,"0");
+  const day = String(d.getDate()).padStart(2,"0");
+  return `${y}-${m}-${day}`;
+}
+
+function esc(s){
+  return String(s ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
+function normalizeCat(cat){
+  if(cat === "上衣") return "外衫";
+  if(cat === "披帛") return "其他";
+  if(cat === "披锦") return "其他";
+  if(cat === "发饰") return "其他";
+  if(CATEGORIES.includes(cat)) return cat;
+  return "其他";
+}
+
+function normalizeAll(){
+  clothes = clothes.map(c => ({
+    id: c.id || Date.now() + Math.random(),
+    name: c.name || "未命名单品",
+    cat: normalizeCat(c.cat),
+    price: Number(c.price || 0),
+    date: c.date || "",
+    shop: c.shop || "",
+    note: c.note || "",
+    img: c.img || ""
+  }));
+
+  ootds = ootds.map(o => ({
+    date: o.date || todayKey,
+    name: o.name || "今日汉服穿搭",
+    occasion: o.occasion || "日常",
+    note: o.note || "",
+    items: Array.isArray(o.items) ? o.items : [],
+    img: o.img || ""
+  }));
 }
 
 function save(){
-  localStorage.setItem("hanfu_clothes", JSON.stringify(clothes));
-  localStorage.setItem("hanfu_ootds", JSON.stringify(ootds));
-  localStorage.setItem("hanfu_tab", tab);
+  localStorage.setItem(STORAGE_CLOTHES, JSON.stringify(clothes));
+  localStorage.setItem(STORAGE_OOTDS, JSON.stringify(ootds));
+  localStorage.setItem(STORAGE_TAB, tab);
+  localStorage.setItem(STORAGE_VIEW, viewMode);
 }
 
 function setTab(t){
@@ -303,121 +483,229 @@ function setTab(t){
   render();
 }
 
+function setViewMode(mode){
+  viewMode = mode;
+  save();
+  renderWardrobe();
+}
+
 function fileToBase64(file, cb){
-  if(!file){ cb(""); return; }
+  if(!file){
+    cb("");
+    return;
+  }
+
   const reader = new FileReader();
   reader.onload = e => cb(e.target.result);
+  reader.onerror = () => {
+    alert("图片读取失败，可以换一张试试。");
+    cb("");
+  };
   reader.readAsDataURL(file);
 }
 
 function formatDate(d){
-  return d.replaceAll("-","/");
+  return String(d || "").replaceAll("-","/");
 }
 
 function getWearCount(id){
-  return ootds.filter(o => o.items.includes(id)).length;
+  return ootds.filter(o => Array.isArray(o.items) && o.items.includes(id)).length;
 }
 
 function render(){
   $("todayText").innerText = "今日 · " + formatDate(todayKey);
-  document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));
-  $("tab-" + tab).classList.add("active");
-  if(tab==="today") renderToday();
-  if(tab==="wardrobe") renderWardrobe();
-  if(tab==="calendar") renderCalendar();
-  if(tab==="stats") renderStats();
+
+  document.querySelectorAll(".tabs button").forEach(b => b.classList.remove("active"));
+  const active = $("tab-" + tab);
+  if(active) active.classList.add("active");
+
+  if(tab === "today") renderToday();
+  if(tab === "wardrobe") renderWardrobe();
+  if(tab === "calendar") renderCalendar();
+  if(tab === "stats") renderStats();
 }
+
+/* 今日 */
 
 function renderToday(){
   const todayOotd = ootds.find(o => o.date === todayKey);
+  const month = todayKey.slice(0,7);
+  const monthDays = ootds.filter(o => o.date.startsWith(month)).length;
+
   $("main").innerHTML = `
     <div class="card">
       <h2>今日穿搭</h2>
+      <div class="notice">记录今天穿了哪一套、搭了哪些单品。以后可以看日历和单品穿着次数。</div>
+      <div style="height:10px"></div>
       ${
         todayOotd
         ? renderOotdCard(todayOotd)
         : `<div class="empty">今天还没有记录穿搭</div>`
       }
-      <button class="btn" onclick="showOotdForm('${todayKey}')">
+      <button class="btn" onclick="showOotdForm('${todayKey}','today')">
         ${todayOotd ? "修改今日穿搭" : "记录今天穿什么"}
       </button>
+    </div>
+
+    <div class="card">
+      <h2>本月小记</h2>
+      <div class="stat">
+        <div class="stat-box">
+          <div class="stat-num">${monthDays}</div>
+          <div class="small">本月穿汉服天数</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num">${ootds.length}</div>
+          <div class="small">累计记录天数</div>
+        </div>
+      </div>
     </div>
 
     <div class="card">
       <h2>最近穿搭</h2>
       ${
         ootds.length
-        ? ootds.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5).map(renderOotdCard).join("")
+        ? ootds.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5).map(o => renderOotdCard(o)).join("")
         : `<div class="empty">还没有穿搭记录</div>`
       }
     </div>
   `;
 }
 
+/* 衣柜 */
+
 function renderWardrobe(){
+  const selectedCat = sessionStorage.getItem("hanfu_filter_cat") || "全部";
+  const keyword = sessionStorage.getItem("hanfu_search") || "";
+
+  const filtered = clothes.filter(c => {
+    const okCat = selectedCat === "全部" || c.cat === selectedCat;
+    const text = `${c.name} ${c.cat} ${c.shop} ${c.note}`.toLowerCase();
+    const okSearch = !keyword || text.includes(keyword.toLowerCase());
+    return okCat && okSearch;
+  });
+
   $("main").innerHTML = `
     <div class="card">
       <h2>添加汉服单品</h2>
-      <input id="c-name" placeholder="名称，例如：灰蓝百迭裙">
+
+      <input id="c-name" placeholder="名称，例如：灰蓝百迭裙 / 白色飞机袖 / 茶色吊带">
+
       <select id="c-cat">
-        <option>上衣</option><option>裙装</option><option>外套</option>
-        <option>披帛</option><option>鞋履</option><option>发饰</option>
-        <option>包袋</option><option>其他</option>
+        ${CATEGORIES.map(c => `<option>${c}</option>`).join("")}
       </select>
-      <input id="c-price" type="number" placeholder="价格">
+
+      <input id="c-price" type="number" placeholder="价格，可不填">
       <input id="c-date" type="date">
       <input id="c-shop" placeholder="店铺/品牌，可不填">
-      <textarea id="c-note" placeholder="备注，可不填"></textarea>
+      <textarea id="c-note" placeholder="备注，比如版型、尺码、是否掉色等，可不填"></textarea>
       <input id="c-img" type="file" accept="image/*">
+
       <button class="btn" onclick="addCloth()">保存到衣柜</button>
     </div>
 
     <div class="card">
-      <h2>我的衣柜</h2>
+      <div class="row between">
+        <h2 style="margin:0">我的衣柜</h2>
+        <div>
+          <button class="btn secondary" onclick="setViewMode('grid')">宫格</button>
+          <button class="btn secondary" onclick="setViewMode('list')">列表</button>
+        </div>
+      </div>
+
+      <input
+        id="search"
+        placeholder="搜索名称、店铺、备注"
+        value="${esc(keyword)}"
+        oninput="sessionStorage.setItem('hanfu_search', this.value); renderWardrobe();"
+      >
+
+      <div class="toolbar">
+        ${["全部",...CATEGORIES].map(c => `
+          <button class="pill ${selectedCat===c?'active':''}" onclick="setFilterCat('${c}')">${c}</button>
+        `).join("")}
+      </div>
+
+      <div class="small" style="margin-bottom:8px">
+        共 ${clothes.length} 件，当前显示 ${filtered.length} 件 · 当前为 ${viewMode === "grid" ? "宫格模式" : "列表模式"}
+      </div>
+
       ${
-        clothes.length
-        ? `<div class="grid">${clothes.map(renderCloth).join("")}</div>`
-        : `<div class="empty">衣柜还是空的</div>`
+        filtered.length
+        ? viewMode === "grid"
+          ? `<div class="grid">${filtered.map(renderClothGrid).join("")}</div>`
+          : `<div>${filtered.map(renderClothList).join("")}</div>`
+        : `<div class="empty">没有符合条件的单品</div>`
       }
     </div>
   `;
 }
 
-function renderCloth(c){
+function setFilterCat(cat){
+  sessionStorage.setItem("hanfu_filter_cat", cat);
+  renderWardrobe();
+}
+
+function renderClothGrid(c){
   const count = getWearCount(c.id);
   const cost = count ? Math.round(Number(c.price || 0) / count) : Number(c.price || 0);
+
   return `
     <div class="item">
       <div class="photo">${c.img ? `<img src="${c.img}">` : "无照片"}</div>
       <div class="item-body">
-        <div class="item-name">${c.name}</div>
-        <span class="tag">${c.cat}</span>
-        <div class="price">¥${c.price || 0}</div>
-        <div class="small">已穿 ${count} 次</div>
-        <div class="small">单次成本 ¥${cost}</div>
-        ${c.shop ? `<div class="small">店铺：${c.shop}</div>` : ""}
-        <hr>
-        <button class="btn danger" onclick="deleteCloth(${c.id})">删除</button>
+        <div class="item-name">${esc(c.name)}</div>
+        <span class="tag">${esc(c.cat)}</span>
+        <div class="price">¥${Number(c.price || 0)}</div>
+        <div class="small">穿 ${count} 次</div>
+        <div class="small">单次 ¥${cost}</div>
+        <button class="btn danger" style="padding:6px 9px;font-size:12px" onclick="deleteCloth(${c.id})">删除</button>
       </div>
+    </div>
+  `;
+}
+
+function renderClothList(c){
+  const count = getWearCount(c.id);
+  const cost = count ? Math.round(Number(c.price || 0) / count) : Number(c.price || 0);
+
+  return `
+    <div class="list-item">
+      <div class="list-thumb photo">${c.img ? `<img src="${c.img}">` : ""}</div>
+      <div class="list-main">
+        <div class="item-name">${esc(c.name)}</div>
+        <div>
+          <span class="tag">${esc(c.cat)}</span>
+          ${c.shop ? `<span class="tag">${esc(c.shop)}</span>` : ""}
+        </div>
+        <div class="small">¥${Number(c.price || 0)} · 已穿 ${count} 次 · 单次 ¥${cost}</div>
+      </div>
+      <button class="btn danger" style="padding:7px 10px;font-size:12px" onclick="deleteCloth(${c.id})">删</button>
     </div>
   `;
 }
 
 function addCloth(){
   const name = $("c-name").value.trim();
-  if(!name){ alert("先填名称"); return; }
+  if(!name){
+    alert("先填名称");
+    return;
+  }
+
   const file = $("c-img").files[0];
-  fileToBase64(file, img=>{
+
+  fileToBase64(file, img => {
     clothes.push({
-      id:Date.now(),
+      id: Date.now(),
       name,
-      cat:$("c-cat").value,
-      price:Number($("c-price").value || 0),
-      date:$("c-date").value,
-      shop:$("c-shop").value.trim(),
-      note:$("c-note").value.trim(),
+      cat: normalizeCat($("c-cat").value),
+      price: Number($("c-price").value || 0),
+      date: $("c-date").value,
+      shop: $("c-shop").value.trim(),
+      note: $("c-note").value.trim(),
       img
     });
+
     save();
     renderWardrobe();
   });
@@ -425,173 +713,404 @@ function addCloth(){
 
 function deleteCloth(id){
   if(!confirm("确定删除这件单品吗？相关穿搭记录里也会移除它。")) return;
-  clothes = clothes.filter(c=>c.id!==id);
-  ootds = ootds.map(o=>({...o,items:o.items.filter(i=>i!==id)}));
+
+  clothes = clothes.filter(c => c.id !== id);
+  ootds = ootds.map(o => ({
+    ...o,
+    items: o.items.filter(i => i !== id)
+  }));
+
   save();
   render();
 }
 
-function showOotdForm(date){
+/* 穿搭表单 */
+
+function showOotdForm(date, backTab){
+  formBackTab = backTab || tab || "today";
+
   if(clothes.length === 0){
     alert("请先去衣柜添加汉服单品");
     setTab("wardrobe");
     return;
   }
-  const old = ootds.find(o=>o.date===date);
+
+  const old = ootds.find(o => o.date === date);
+
   $("main").innerHTML = `
     <div class="card">
       <h2>${formatDate(date)} 穿搭记录</h2>
-      <input id="o-name" placeholder="整套名字，例如：初夏青绿宋制" value="${old?.name || ""}">
+
+      <input id="o-name" placeholder="整套名字，例如：初夏青绿宋制" value="${esc(old ? old.name : "")}">
+
       <select id="o-occasion">
-        <option ${old?.occasion==="日常"?"selected":""}>日常</option>
-        <option ${old?.occasion==="拍照"?"selected":""}>拍照</option>
-        <option ${old?.occasion==="逛街"?"selected":""}>逛街</option>
-        <option ${old?.occasion==="茶会"?"selected":""}>茶会</option>
-        <option ${old?.occasion==="漫展"?"selected":""}>漫展</option>
-        <option ${old?.occasion==="通勤"?"selected":""}>通勤</option>
+        ${["日常","拍照","逛街","茶会","漫展","通勤","聚会","其他"].map(v => `
+          <option ${old && old.occasion === v ? "selected" : ""}>${v}</option>
+        `).join("")}
       </select>
-      <textarea id="o-note" placeholder="今天的穿搭感受、天气、妆造等">${old?.note || ""}</textarea>
+
+      <textarea id="o-note" placeholder="今天的穿搭感受、天气、妆造等">${esc(old ? old.note : "")}</textarea>
+
       <div class="small">选择今天穿了哪些单品：</div>
+
       <div class="checklist">
-        ${clothes.map(c=>`
+        ${clothes.map(c => `
           <label class="checkline">
-            <input type="checkbox" value="${c.id}" ${old?.items.includes(c.id) ? "checked" : ""}>
-            ${c.name} <span class="tag">${c.cat}</span>
+            <input type="checkbox" value="${c.id}" ${old && old.items.includes(c.id) ? "checked" : ""}>
+            <span>${esc(c.name)}</span>
+            <span class="tag">${esc(c.cat)}</span>
           </label>
         `).join("")}
       </div>
+
       <input id="o-img" type="file" accept="image/*">
-      ${old?.img ? `<div class="photo" style="margin:10px 0"><img src="${old.img}"></div>` : ""}
+
+      ${
+        old && old.img
+        ? `<div class="photo" style="margin:10px 0"><img src="${old.img}"></div>`
+        : ""
+      }
+
       <button class="btn" onclick="saveOotd('${date}')">保存穿搭</button>
-      <button class="btn secondary" onclick="renderToday()">返回</button>
-      ${old ? `<button class="btn danger" onclick="deleteOotd('${date}')">删除这天记录</button>` : ""}
+      <button class="btn secondary" onclick="cancelOotdForm()">返回</button>
+      ${
+        old
+        ? `<button class="btn danger" onclick="deleteOotd('${date}')">删除这天记录</button>`
+        : ""
+      }
     </div>
   `;
 }
 
+function cancelOotdForm(){
+  tab = formBackTab || "today";
+  save();
+  render();
+}
+
 function saveOotd(date){
-  const selected = Array.from(document.querySelectorAll(".checkline input:checked")).map(i=>Number(i.value));
-  if(selected.length===0){
+  const selected = Array.from(document.querySelectorAll(".checkline input:checked"))
+    .map(i => Number(i.value));
+
+  if(selected.length === 0){
     alert("至少选择一件单品");
     return;
   }
-  const old = ootds.find(o=>o.date===date);
+
+  const old = ootds.find(o => o.date === date);
   const file = $("o-img").files[0];
-  fileToBase64(file, img=>{
+
+  fileToBase64(file, img => {
     const data = {
       date,
-      name:$("o-name").value.trim() || "今日汉服穿搭",
-      occasion:$("o-occasion").value,
-      note:$("o-note").value.trim(),
-      items:selected,
-      img: img || old?.img || ""
+      name: $("o-name").value.trim() || "今日汉服穿搭",
+      occasion: $("o-occasion").value,
+      note: $("o-note").value.trim(),
+      items: selected,
+      img: img || (old ? old.img : "")
     };
-    ootds = ootds.filter(o=>o.date!==date);
+
+    ootds = ootds.filter(o => o.date !== date);
     ootds.push(data);
+
+    tab = formBackTab || "today";
     save();
-    setTab("today");
+    render();
   });
 }
 
 function deleteOotd(date){
   if(!confirm("确定删除这天穿搭记录吗？")) return;
-  ootds = ootds.filter(o=>o.date!==date);
+
+  ootds = ootds.filter(o => o.date !== date);
+  tab = formBackTab || "today";
   save();
-  setTab("today");
+  render();
 }
 
 function renderOotdCard(o){
-  const names = o.items.map(id=>clothes.find(c=>c.id===id)?.name).filter(Boolean);
+  const names = o.items
+    .map(id => clothes.find(c => c.id === id)?.name)
+    .filter(Boolean);
+
   return `
-    <div class="card ootd" style="margin-bottom:10px">
-      <div class="row" style="justify-content:space-between">
+    <div class="card ootd" style="margin-bottom:10px;padding:12px">
+      <div class="row between">
         <div>
-          <div class="item-name">${o.name}</div>
-          <div class="small">${formatDate(o.date)} · ${o.occasion}</div>
+          <div class="item-name">${esc(o.name)}</div>
+          <div class="small">${formatDate(o.date)} · ${esc(o.occasion)}</div>
         </div>
-        <button class="btn secondary" onclick="showOotdForm('${o.date}')">查看</button>
+        <button class="btn secondary" onclick="showOotdForm('${o.date}','${tab}')">查看</button>
       </div>
+
       ${o.img ? `<div class="photo" style="margin:10px 0"><img src="${o.img}"></div>` : ""}
-      <div class="small">${names.join(" + ")}</div>
-      ${o.note ? `<div class="small" style="margin-top:5px">“${o.note}”</div>` : ""}
+
+      <div class="small">${names.length ? esc(names.join(" + ")) : "没有可显示的单品"}</div>
+      ${o.note ? `<div class="small" style="margin-top:5px">“${esc(o.note)}”</div>` : ""}
     </div>
   `;
 }
 
+/* 日历 */
+
 function renderCalendar(){
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth();
-  const first = new Date(year, month, 1).getDay();
-  const days = new Date(year, month+1, 0).getDate();
+  const first = new Date(calYear, calMonth, 1).getDay();
+  const days = new Date(calYear, calMonth + 1, 0).getDate();
+  const monthKey = `${calYear}-${String(calMonth+1).padStart(2,"0")}`;
+
   let cells = "";
-  ["日","一","二","三","四","五","六"].forEach(d=>cells+=`<div class="day-head">${d}</div>`);
-  for(let i=0;i<first;i++) cells+=`<div></div>`;
-  for(let d=1;d<=days;d++){
-    const key = `${year}-${String(month+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
-    const has = ootds.some(o=>o.date===key);
-    cells += `<div class="day ${has?'has':''}" onclick="showOotdForm('${key}')">${d}${has?'<div class="dot"></div>':''}</div>`;
+
+  ["日","一","二","三","四","五","六"].forEach(d => {
+    cells += `<div class="day-head">${d}</div>`;
+  });
+
+  for(let i=0; i<first; i++){
+    cells += `<div></div>`;
   }
+
+  for(let d=1; d<=days; d++){
+    const key = `${calYear}-${String(calMonth+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+    const has = ootds.some(o => o.date === key);
+    const isToday = key === todayKey;
+
+    cells += `
+      <div class="day ${has ? "has" : ""} ${isToday ? "today" : ""}" onclick="showOotdForm('${key}','calendar')">
+        ${d}
+        ${has ? '<div class="dot"></div>' : ''}
+      </div>
+    `;
+  }
+
+  const monthRecords = ootds
+    .filter(o => o.date.startsWith(monthKey))
+    .sort((a,b) => b.date.localeCompare(a.date));
 
   $("main").innerHTML = `
     <div class="card">
-      <h2>${year}年${month+1}月</h2>
+      <div class="row between">
+        <button class="btn secondary" onclick="changeMonth(-1)">‹ 上月</button>
+        <h2 style="margin:0">${calYear}年${calMonth + 1}月</h2>
+        <button class="btn secondary" onclick="changeMonth(1)">下月 ›</button>
+      </div>
+
+      <div style="height:10px"></div>
       <div class="calendar">${cells}</div>
-      <div class="small" style="margin-top:12px">点击日期可以补记或查看当天穿搭。</div>
+
+      <div class="small" style="margin-top:12px">
+        点击日期可以补记或查看当天穿搭。红圈是今天，有红点表示当天有记录。
+      </div>
     </div>
+
     <div class="card">
       <h2>本月记录</h2>
       ${
-        ootds.filter(o=>o.date.startsWith(`${year}-${String(month+1).padStart(2,"0")}`)).length
-        ? ootds
-          .filter(o=>o.date.startsWith(`${year}-${String(month+1).padStart(2,"0")}`))
-          .sort((a,b)=>b.date.localeCompare(a.date))
-          .map(renderOotdCard).join("")
+        monthRecords.length
+        ? monthRecords.map(o => renderOotdCard(o)).join("")
         : `<div class="empty">本月还没有记录</div>`
       }
     </div>
   `;
 }
 
+function changeMonth(delta){
+  calMonth += delta;
+
+  if(calMonth < 0){
+    calMonth = 11;
+    calYear--;
+  }
+
+  if(calMonth > 11){
+    calMonth = 0;
+    calYear++;
+  }
+
+  renderCalendar();
+}
+
+/* 统计和备份 */
+
+function getBackupData(){
+  return {
+    app: "hanfu-ootd",
+    version: "2.0",
+    exportedAt: new Date().toISOString(),
+    clothes,
+    ootds,
+    tab
+  };
+}
+
+function exportBackup(){
+  const data = getBackupData();
+  const text = JSON.stringify(data, null, 2);
+  const blob = new Blob([text], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const date = new Date().toISOString().slice(0,10);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `汉服手账备份-${date}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+
+  URL.revokeObjectURL(url);
+}
+
+async function copyBackup(){
+  const text = JSON.stringify(getBackupData(), null, 2);
+
+  try{
+    await navigator.clipboard.writeText(text);
+    alert("备份内容已复制，可以粘贴到备忘录或文本文件里保存。");
+  }catch(e){
+    prompt("复制失败，可以手动复制下面的备份内容：", text);
+  }
+}
+
+function chooseBackupFile(){
+  const input = $("backup-file");
+  if(input) input.click();
+}
+
+function importBackupFile(input){
+  const file = input.files && input.files[0];
+  if(!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = function(e){
+    try{
+      const data = JSON.parse(e.target.result);
+
+      if(!data || !Array.isArray(data.clothes) || !Array.isArray(data.ootds)){
+        alert("这个文件不像是汉服手账备份。");
+        return;
+      }
+
+      const ok = confirm("导入备份会覆盖当前浏览器里的衣柜和穿搭记录。\n\n确定继续吗？");
+      if(!ok) return;
+
+      clothes = data.clothes;
+      ootds = data.ootds;
+      tab = data.tab || "today";
+
+      normalizeAll();
+      save();
+
+      alert("导入成功。");
+      render();
+
+    }catch(err){
+      alert("导入失败：备份文件格式不正确。");
+    }finally{
+      input.value = "";
+    }
+  };
+
+  reader.readAsText(file, "utf-8");
+}
+
+function clearAllData(){
+  const first = confirm("确定要清空所有衣柜和穿搭记录吗？这一步不能撤销。");
+  if(!first) return;
+
+  const second = confirm("再次确认：真的要删除全部数据吗？建议先导出备份。");
+  if(!second) return;
+
+  clothes = [];
+  ootds = [];
+  tab = "today";
+
+  save();
+  alert("已清空全部数据。");
+  render();
+}
+
 function renderStats(){
-  const totalPrice = clothes.reduce((s,c)=>s+Number(c.price||0),0);
-  const totalWear = ootds.reduce((s,o)=>s+o.items.length,0);
+  const totalPrice = clothes.reduce((s,c) => s + Number(c.price || 0), 0);
   const month = todayKey.slice(0,7);
-  const monthDays = ootds.filter(o=>o.date.startsWith(month)).length;
+  const monthDays = ootds.filter(o => o.date.startsWith(month)).length;
 
   const ranked = clothes
-    .map(c=>({...c,count:getWearCount(c.id)}))
-    .sort((a,b)=>b.count-a.count);
+    .map(c => ({...c, count:getWearCount(c.id)}))
+    .sort((a,b) => b.count - a.count);
+
+  const most = ranked.find(c => c.count > 0);
 
   $("main").innerHTML = `
     <div class="card">
       <h2>穿搭统计</h2>
       <div class="stat">
-        <div class="stat-box"><div class="stat-num">${clothes.length}</div><div class="small">衣柜单品</div></div>
-        <div class="stat-box"><div class="stat-num">¥${totalPrice}</div><div class="small">总花费</div></div>
-        <div class="stat-box"><div class="stat-num">${ootds.length}</div><div class="small">穿搭天数</div></div>
-        <div class="stat-box"><div class="stat-num">${monthDays}</div><div class="small">本月穿汉服天数</div></div>
+        <div class="stat-box">
+          <div class="stat-num">${clothes.length}</div>
+          <div class="small">衣柜单品</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num">¥${totalPrice}</div>
+          <div class="small">总花费</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num">${ootds.length}</div>
+          <div class="small">穿搭天数</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num">${monthDays}</div>
+          <div class="small">本月穿汉服天数</div>
+        </div>
       </div>
+
+      <hr>
+
+      <div class="small">
+        ${most ? `目前最常穿：${esc(most.name)}，已穿 ${most.count} 次。` : "还没有穿搭记录，先从今日开始记一套吧。"}
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>数据备份</h2>
+      <div class="notice">
+        数据保存在当前浏览器里。换手机、清缓存、换浏览器前，建议先导出备份。
+      </div>
+
+      <div style="height:8px"></div>
+
+      <button class="btn" onclick="exportBackup()">导出备份文件</button>
+      <button class="btn secondary" onclick="copyBackup()">复制备份文本</button>
+      <button class="btn secondary" onclick="chooseBackupFile()">导入备份</button>
+
+      <input
+        id="backup-file"
+        type="file"
+        accept="application/json,.json"
+        style="display:none"
+        onchange="importBackupFile(this)"
+      >
+
+      <hr>
+
+      <button class="btn danger" onclick="clearAllData()">清空全部数据</button>
     </div>
 
     <div class="card">
       <h2>单品穿着排行</h2>
       ${
         ranked.length
-        ? ranked.map(c=>{
-          const cost = c.count ? Math.round(Number(c.price||0)/c.count) : Number(c.price||0);
-          return `
-            <div style="padding:10px 0;border-bottom:1px dashed #d8cbb8">
-              <div class="row" style="justify-content:space-between">
-                <div>
-                  <div class="item-name">${c.name}</div>
-                  <div class="small">${c.cat} · 已穿 ${c.count} 次</div>
+        ? ranked.map(c => {
+            const cost = c.count ? Math.round(Number(c.price || 0) / c.count) : Number(c.price || 0);
+            return `
+              <div style="padding:10px 0;border-bottom:1px dashed #d8cbb8">
+                <div class="row between">
+                  <div>
+                    <div class="item-name">${esc(c.name)}</div>
+                    <div class="small">${esc(c.cat)} · 已穿 ${c.count} 次</div>
+                  </div>
+                  <div class="small">单次 ¥${cost}</div>
                 </div>
-                <div class="small">单次 ¥${cost}</div>
               </div>
-            </div>
-          `;
-        }).join("")
+            `;
+          }).join("")
         : `<div class="empty">暂无数据</div>`
       }
     </div>
@@ -599,8 +1118,8 @@ function renderStats(){
     <div class="card">
       <h2>闲置提醒</h2>
       ${
-        ranked.filter(c=>c.count===0).length
-        ? ranked.filter(c=>c.count===0).map(c=>`<div class="small">· ${c.name} 还没有穿过</div>`).join("")
+        ranked.filter(c => c.count === 0).length
+        ? ranked.filter(c => c.count === 0).map(c => `<div class="small">· ${esc(c.name)} 还没有穿过</div>`).join("")
         : `<div class="empty">目前没有完全闲置的单品</div>`
       }
     </div>
